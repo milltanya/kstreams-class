@@ -14,12 +14,13 @@ import java.util.function.Supplier;
 public class BetSupplier implements Supplier<Bet> {
     private final DataFactory df;
 
+    private final BettorSupplier bettorSupplier;
     private final EventSupplier eventSupplier;
 
     @Override
     public Bet get() {
         return Bet.builder()
-                .bettor(df.getFirstName() + " " + df.getLastName())
+                .bettor(bettorSupplier.get())
                 .match(eventSupplier.get())
                 .outcome(df.getItem(Outcome.values()))
                 .amount(df.getNumberUpTo(1000))
