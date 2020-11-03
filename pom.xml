@@ -20,6 +20,7 @@
         <module>windows</module>
         <module>BetSumByBettor</module>
         <module>BetSumByTeam</module>
+        <module>SuspiciousBetByBettor</module>
     </modules>
 
     <organization>
