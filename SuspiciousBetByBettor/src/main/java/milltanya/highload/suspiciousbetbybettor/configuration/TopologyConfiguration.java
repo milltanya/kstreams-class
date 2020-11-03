@@ -33,20 +33,19 @@ public class TopologyConfiguration {
                 Consumed.with(Serdes.String(), new JsonSerde<>(EventScore.class)));
 
         KStream<String, Long> goals = scores
-                .filter((k, v) -> v.getScore().getHome() + v.getScore().getAway() >= 1)
                 .groupByKey()
                 .aggregate(
-                        () -> new GoalInfo(new Score(), "", 0L),
+                        () -> new GoalInfo(new Score(), "0:0", 0L),
                         (k, v, a) -> new GoalInfo(
                                 v.getScore(),
                                 (new Score(
                                         v.getScore().getHome() - a.getCurrentScore().getHome(),
                                         v.getScore().getAway() - a.getCurrentScore().getAway()
-                                )).toString().equals("1:0") ? "H" : "A",
+                                )).toString(),
                                 v.getTimestamp()),
                         Materialized.with(Serdes.String(), new JsonSerde<>(GoalInfo.class)))
                 .toStream()
-                .map((k, v) -> KeyValue.pair(k + ":" + v.getScorerTeam(), v.getTimestamp()));
+                .map((k, v) -> KeyValue.pair(k + ":" + v.scorerTeam(), v.getTimestamp()));
 
         goals.to(GOAL_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
 

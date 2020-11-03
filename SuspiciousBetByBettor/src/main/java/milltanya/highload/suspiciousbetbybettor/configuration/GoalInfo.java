@@ -8,12 +8,16 @@ import ru.curs.counting.model.Score;
 @RequiredArgsConstructor
 public class GoalInfo {
     Score currentScore;
-    String scorerTeam;
+    String goal;
     Long timestamp;
 
-    public GoalInfo(Score score, String team, Long ts) {
+    public GoalInfo(Score score, String g, Long ts) {
         currentScore = score;
-        scorerTeam = team;
+        goal = g;
         timestamp = ts;
+    }
+
+    public String scorerTeam() {
+        return goal.equals("1:0") ? "H" : goal.equals("0:1") ? "A" : "D";
     }
 }

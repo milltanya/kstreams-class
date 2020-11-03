@@ -64,19 +64,28 @@ public class TestSuspiciousByBettor {
                 .odds(1.7)
                 .timestamp(1604364399109L)
                 .build();
+        EventScore eventScore0 = new EventScore(
+                "Germany-Belgium",
+                new Score(1, 1),
+                1604364323464L);
         EventScore eventScore1 = new EventScore(
                 "Germany-Belgium",
-                new Score(1, 0),
+                new Score(2, 1),
                 1604364399822L);
         EventScore eventScore2 = new EventScore(
                 "Germany-Belgium",
-                new Score(1, 1),
+                new Score(2, 2),
                 1604364476585L);
 
-        betTopic.pipeInput(bet.key(), bet, 1604364399109L);
-        eventScoreTopic.pipeInput(eventScore1.getEvent(), eventScore1, 1604364399822L);
+        eventScoreTopic.pipeInput(eventScore0.getEvent(), eventScore0, eventScore0.getTimestamp());
+        betTopic.pipeInput(bet.key(), bet, bet.getTimestamp());
+        eventScoreTopic.pipeInput(eventScore1.getEvent(), eventScore1, eventScore1.getTimestamp());
 
         TestRecord<String, Long> goalRecord = middleTopic.readRecord();
+        assertEquals(eventScore0.getEvent() + ":D", goalRecord.key());
+        assertEquals(eventScore0.getTimestamp(), goalRecord.getValue());
+
+        goalRecord = middleTopic.readRecord();
         assertEquals(eventScore1.getEvent() + ":H", goalRecord.key());
         assertEquals(eventScore1.getTimestamp(), goalRecord.getValue());
 
@@ -84,7 +93,8 @@ public class TestSuspiciousByBettor {
         assertEquals(bet.getBettor(), suspiciousBetRecord.key());
         assertEquals(bet, suspiciousBetRecord.getValue());
 
-        eventScoreTopic.pipeInput(eventScore2.getEvent(), eventScore2, 1604364476585L);
+        eventScoreTopic.pipeInput(eventScore2.getEvent(), eventScore2, eventScore2.getTimestamp());
+
         goalRecord = middleTopic.readRecord();
         assertEquals(eventScore2.getEvent() + ":A", goalRecord.key());
         assertEquals(eventScore2.getTimestamp(), goalRecord.getValue());
