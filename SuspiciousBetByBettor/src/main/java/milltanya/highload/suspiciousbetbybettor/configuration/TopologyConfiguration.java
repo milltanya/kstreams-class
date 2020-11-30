@@ -56,7 +56,7 @@ public class TopologyConfiguration {
                 SuspiciousBet::new,
                 JoinWindows.of(Duration.ofSeconds(1)),
                 StreamJoined.with(Serdes.String(), new JsonSerde<>(Bet.class), Serdes.Long()))
-                .filter((k, v) -> v.getBet().getTimestamp() < v.getGoalTimestamp())
+                .filter((k, v) -> (v.getGoalTimestamp() - v.getBet().getTimestamp() > 0 && v.getGoalTimestamp() - v.getBet().getTimestamp() <= 1000))
                 .map((k, v) -> KeyValue.pair(v.getBet().getBettor(), v.getBet()));
 
         suspiciousBets.to(SUSPICIOUS_BET_BY_BETTOR, Produced.with(Serdes.String(), new JsonSerde<>(Bet.class)));

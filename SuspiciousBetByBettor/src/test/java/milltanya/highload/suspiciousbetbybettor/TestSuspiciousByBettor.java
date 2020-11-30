@@ -101,4 +101,41 @@ public class TestSuspiciousByBettor {
 
         assertTrue(outputTopic.isEmpty());
     }
+
+    void placeBet(Bet bet) {
+        betTopic.pipeInput(bet.key(), bet, bet.getTimestamp());
+    }
+    void placeEvent(EventScore event) {
+        eventScoreTopic.pipeInput(event.getEvent(), event, event.getTimestamp());
+    }
+    @Test
+    void testFraud() {
+        long currentTimestamp = System.currentTimeMillis();
+        Score score = new Score().goalHome();
+        placeEvent(new EventScore("A-B", score, currentTimestamp));
+        score = score.goalHome();
+        placeEvent(new EventScore("A-B", score, currentTimestamp + 100 * 1000));
+        score = score.goalAway();
+        placeEvent(new EventScore("A-B", score, currentTimestamp + 200 * 1000));
+        //ok
+        placeBet(new Bet("John", "A-B", Outcome.H, 1, 1, currentTimestamp - 2000));
+        //ok
+        placeBet(new Bet("Sara", "A-B", Outcome.H, 1, 1, currentTimestamp + 100 * 1000 - 2000));
+        //fraud?
+        Bet fraud1 = new Bet("Sara", "A-B", Outcome.H, 1, 1, currentTimestamp + 100 * 1000 - 10);
+        placeBet(fraud1);
+        //fraud?
+        Bet fraud2 = new Bet("Mary", "A-B", Outcome.A, 1, 1, currentTimestamp + 200 * 1000 - 20);
+        placeBet(fraud2);
+
+        TestRecord<String, Bet> suspiciousBetRecord = outputTopic.readRecord();
+        assertEquals(fraud1.getBettor(), suspiciousBetRecord.key());
+        assertEquals(fraud1, suspiciousBetRecord.getValue());
+
+        suspiciousBetRecord = outputTopic.readRecord();
+        assertEquals(fraud2.getBettor(), suspiciousBetRecord.key());
+        assertEquals(fraud2, suspiciousBetRecord.getValue());
+
+        assertTrue(outputTopic.isEmpty());
+    }
 }
